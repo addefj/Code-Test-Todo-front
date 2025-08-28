@@ -1,30 +1,42 @@
-import React from "react";
+import React, { use, useEffect, useState } from "react";
 import "./Task.css";
 import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
+import axios from "axios";
 
 const Task = () => {
   // todo*: make this component functional by implementing state management and API calls
-  const tasks = [
-    {
-      id: 1,
-      title: "Garden chores",
-      created: "2025-07-10",
-      description: "Cut grass, trim bushes, and water plants",
-      dueDate: "2025-07-12",
-      status: "pending",
-      assignee: "Mehrdad Javan",
-    },
-    {
-      id: 2,
-      title: "Grocery shopping",
-      created: "2025-08-28",
-      description: "Buy ingredients for the weekend barbecue",
-      dueDate: "2025-08-29",
-      status: "pending",
-      assignee: "Simon Elbrink",
-    },
-  ];
+  const apiEndpoint = "http://localhost:9090/api/todo";
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    fetchAllTasks();
+  }, []);
+
+  const fetchAllTasks = async () => {
+    console.log("Started Fetching tasks");
+    const token =
+      "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblZlcnNpb24iOjAsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NTYzODc3OTEsImV4cCI6MTc1NjM5ODU5MX0.nWXHTp-ioqhaTFENqvOQXw2U-zp0Ag0QWyYrKJpDFi03SebYkWbQPbSwQAtRPG5gfuYKBoZ9APGS7O0X56e6Fw";
+
+    await axios
+      .get(apiEndpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response: ", response);
+        if (response.status === 200) {
+          setTodos(response.data);
+        } else {
+          console.log("Unexpected response status: ", response.status);
+        }
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the tasks!", error);
+      });
+    console.log("Finished Fetching tasks");
+  };
 
   return (
     <div className="dashboard-layout">
@@ -136,40 +148,52 @@ const Task = () => {
                 </div>
                 <div className="card-body">
                   <div className="list-group">
-                    
                     {/* Start of conditional rendering */}
 
-                    {tasks.length === 0 ? (
-                      <li className="list-group-item border-0 p-3">
+                    {todos.length === 0 ? (
+                      <li className="list-group-item border p-3">
                         No items in your Todolist
                       </li>
                     ) : (
-                      tasks.map((task) => (
-                        <div className="list-group-item list-group-item-action">
+                      todos.map((todo) => (
+                        <div
+                          className="list-group-item list-group-item-action"
+                          key={todo.id}
+                        >
                           <div className="d-flex w-100 justify-content-between align-items-start">
                             <div className="flex-grow-1">
                               <div className="d-flex justify-content-between">
-                                <h6 className="mb-1">
-                                  {task.title}
-                                </h6>
+                                <h6 className="mb-1">{todo.title}</h6>
                                 <small className="text-muted ms-2">
-                                  Created: {task.created}
+                                  Created: {todo.createdAt.slice(0, 10)}
                                 </small>
                               </div>
                               <p className="mb-1 text-muted small">
-                                {task.description}
+                                {todo.description}
                               </p>
                               <div className="d-flex align-items-center flex-wrap">
                                 <small className="text-muted me-2">
-                                  <i className="bi bi-calendar-event"></i> Due:
-                                  {task.dueDate}
+                                  <i className="bi bi-calendar-event"></i>
+                                  Due: {todo.dueDate.slice(0, 10)}
                                 </small>
                                 <span className="badge bg-info me-2">
-                                  <i className="bi bi-person"></i> {task.assignee}
+                                  <i className="bi bi-person"></i>
+                                  Placeholder for Assignee
                                 </span>
-                                <span className="badge bg-warning text-dark me-2">
-                                  {task.status}
+                                <span className={`badge ${todo.completed ? "bg-success" : "bg-warning"} text-dark me-2`}>
+                                  {todo.completed ? "completed" : "in progress"}
                                 </span>
+
+                                {todo.numberOfAttachments &&
+                                todo.numberOfAttachments.length > 0 ? (
+                                  <span className="badge bg-secondary me-2">
+                                    {todo.numberOfAttachments.length} attachment
+                                    {todo.numberOfAttachments.length > 1 ? "s" : ""}
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+
                               </div>
                             </div>
                             <div className="btn-group ms-3">
@@ -198,7 +222,6 @@ const Task = () => {
                     )}
 
                     {/* End of conditional rendering */}
-
                   </div>
                 </div>
               </div>
