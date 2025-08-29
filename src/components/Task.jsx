@@ -1,22 +1,68 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Task.css";
 import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
 import axios from "axios";
+import { useForm } from "react-hook-form";
 
 const Task = () => {
   // todo*: make this component functional by implementing state management and API calls
   const apiEndpoint = "http://localhost:9090/api/todo";
+  const token = localStorage.getItem("auth_token");
   const [todos, setTodos] = useState([]);
 
   useEffect(() => {
     fetchAllTasks();
   }, []);
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      title: "",
+      description: "",
+      dueDate: "",
+      personId: "",
+      numberOfAttachments: 0,
+    },
+  });
+
+  const [selectedFiles, setSelectedFiles] = useState([]); // State to hold selected attachments
+
+  const handleFileSelection = (e) => {
+    const newFiles = Array.from(e.target.files);
+    setSelectedFiles(newFiles);
+  };
+
+  const onSubmit = async (data) => {
+    data.numberOfAttachments = data.numberOfAttachments.length;
+    
+    console.log("Form Data Submitted: ", data);
+    
+    try {
+      const response = await axios.post(apiEndpoint, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status === 201) {
+        console.log("Task successfully created:", response.data);
+        reset(); // Reset the form after successful submission
+        setSelectedFiles([]); // Clear selected files
+        fetchAllTasks(); // Refresh the task list
+      }
+    } catch (error) {
+      console.error("There was an error creating the task!", error);
+    }
+  };
+
   const fetchAllTasks = async () => {
     console.log("Started Fetching tasks");
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblZlcnNpb24iOjAsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NTYzODc3OTEsImV4cCI6MTc1NjM5ODU5MX0.nWXHTp-ioqhaTFENqvOQXw2U-zp0Ag0QWyYrKJpDFi03SebYkWbQPbSwQAtRPG5gfuYKBoZ9APGS7O0X56e6Fw";
+    
 
     await axios
       .get(apiEndpoint, {
@@ -54,27 +100,55 @@ const Task = () => {
               <div className="card shadow-sm task-form-section">
                 <div className="card-body">
                   <h2 className="card-title mb-4">Add New Task</h2>
-                  <form id="todoForm">
+                  <form id="todoForm" onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-3">
                       <label htmlFor="todoTitle" className="form-label">
                         Title
                       </label>
                       <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${
+                          errors.title ? "is-invalid" : ""
+                        }`}
                         id="todoTitle"
-                        required
+                        {...register("title", {
+                          required: "Title is required",
+                          minLength: {
+                            value: 3,
+                            message: "Title must be at least 3 characters",
+                          },
+                        })}
                       />
+                      {errors.title && (
+                        <div className="invalid-feedback">
+                          {errors.title.message}
+                        </div>
+                      )}
                     </div>
                     <div className="mb-3">
                       <label htmlFor="todoDescription" className="form-label">
                         Description
                       </label>
                       <textarea
-                        className="form-control"
+                        className={`form-control ${
+                          errors.description ? "is-invalid" : ""
+                        }`}
                         id="todoDescription"
                         rows="3"
+                        {...register("description", {
+                          required: "Description is required",
+                          minLength: {
+                            value: 20,
+                            message:
+                              "Description must be at least 20 characters",
+                          },
+                        })}
                       ></textarea>
+                      {errors.description && (
+                        <div className="invalid-feedback">
+                          {errors.description.message}
+                        </div>
+                      )}
                     </div>
                     <div className="row">
                       <div className="col-md-6 mb-3">
@@ -83,15 +157,29 @@ const Task = () => {
                         </label>
                         <input
                           type="datetime-local"
-                          className="form-control"
+                          className={`form-control ${
+                            errors.dueDate ? "is-invalid" : ""
+                          }`}
                           id="todoDueDate"
+                          {...register("dueDate", {
+                            required: "Due date is required",
+                          })}
                         />
+                        {errors.dueDate && (
+                          <div className="invalid-feedback">
+                            {errors.dueDate.message}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-6 mb-3">
                         <label htmlFor="todoPerson" className="form-label">
                           Assign to Person
                         </label>
-                        <select className="form-select" id="todoPerson">
+                        <select
+                          className="form-select"
+                          id="todoPerson"
+                          {...register("personId")}
+                        >
                           <option value="">
                             -- Select Person (Optional) --
                           </option>
@@ -108,15 +196,33 @@ const Task = () => {
                           className="form-control"
                           id="todoAttachments"
                           multiple
+                          {...register("numberOfAttachments", {
+                            onChange: handleFileSelection,
+                          })}
                         />
                         <button
                           className="btn btn-outline-secondary"
                           type="button"
+                          onClick={() => {
+                            setSelectedFiles([]);
+                            setValue("numberOfAttachments", []);
+                          }}
                         >
                           <i className="bi bi-x-lg"></i>
                         </button>
                       </div>
-                      <div className="file-list" id="attachmentPreview"></div>
+                      <div className="file-list" id="attachmentPreview">
+                        <ul className="list-group" id="fileList">
+                          {selectedFiles.map((file, idx) => (
+                            <li
+                              className="list-group-item border-0 p-0"
+                              key={file.name + file.lastModified + idx}
+                            >
+                              {file.name}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                     <div className="d-grid gap-2 d-md-flex justify-content-md-end">
                       <button type="submit" className="btn btn-primary">
@@ -173,14 +279,18 @@ const Task = () => {
                               </p>
                               <div className="d-flex align-items-center flex-wrap">
                                 <small className="text-muted me-2">
-                                  <i className="bi bi-calendar-event"></i>
-                                  Due: {todo.dueDate.slice(0, 10)}
+                                  <i className="bi bi-calendar-event"> </i>
+                                   Due: {todo.dueDate.slice(0, 10)}
                                 </small>
                                 <span className="badge bg-info me-2">
                                   <i className="bi bi-person"></i>
                                   Placeholder for Assignee
                                 </span>
-                                <span className={`badge ${todo.completed ? "bg-success" : "bg-warning"} text-dark me-2`}>
+                                <span
+                                  className={`badge ${
+                                    todo.completed ? "bg-success" : "bg-warning"
+                                  } text-dark me-2`}
+                                >
                                   {todo.completed ? "completed" : "in progress"}
                                 </span>
 
@@ -188,12 +298,13 @@ const Task = () => {
                                 todo.numberOfAttachments.length > 0 ? (
                                   <span className="badge bg-secondary me-2">
                                     {todo.numberOfAttachments.length} attachment
-                                    {todo.numberOfAttachments.length > 1 ? "s" : ""}
+                                    {todo.numberOfAttachments.length > 1
+                                      ? "s"
+                                      : ""}
                                   </span>
                                 ) : (
                                   ""
                                 )}
-
                               </div>
                             </div>
                             <div className="btn-group ms-3">
