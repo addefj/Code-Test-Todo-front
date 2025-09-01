@@ -38,11 +38,29 @@ const Task = () => {
     setSelectedFiles(newFiles);
   };
 
+  const OnDelete = async (id) => {
+    console.log("Delete task with id: ", id);
+    try {
+      const response = await axios.delete(apiEndpoint + "/" + id, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status === 204) {
+        console.log("Task successfully deleted");
+        fetchAllTasks(); // Refresh the task list
+      }
+    } catch (error) {
+      console.error("There was an error deleting the task!", error);
+    }
+  };
+
+
   const onSubmit = async (data) => {
-    data.numberOfAttachments = data.numberOfAttachments.length;
-    
+    data.numberOfAttachments = data.numberOfAttachments.length; // Update to reflect number of files
+
     console.log("Form Data Submitted: ", data);
-    
+
     try {
       const response = await axios.post(apiEndpoint, data, {
         headers: {
@@ -62,7 +80,6 @@ const Task = () => {
 
   const fetchAllTasks = async () => {
     console.log("Started Fetching tasks");
-    
 
     await axios
       .get(apiEndpoint, {
@@ -280,7 +297,7 @@ const Task = () => {
                               <div className="d-flex align-items-center flex-wrap">
                                 <small className="text-muted me-2">
                                   <i className="bi bi-calendar-event"> </i>
-                                   Due: {todo.dueDate.slice(0, 10)}
+                                  Due: {todo.dueDate.slice(0, 10)}
                                 </small>
                                 <span className="badge bg-info me-2">
                                   <i className="bi bi-person"></i>
@@ -295,7 +312,7 @@ const Task = () => {
                                 </span>
 
                                 {todo.numberOfAttachments &&
-                                todo.numberOfAttachments.length > 0 ? (
+                                todo.numberOfAttachments.length == 0 ? (
                                   <span className="badge bg-secondary me-2">
                                     {todo.numberOfAttachments.length} attachment
                                     {todo.numberOfAttachments.length > 1
@@ -311,6 +328,7 @@ const Task = () => {
                               <button
                                 className="btn btn-outline-success btn-sm"
                                 title="Complete"
+                                onClick={() => onMarkComplete(todo)}
                               >
                                 <i className="bi bi-check-lg"></i>
                               </button>
@@ -323,6 +341,7 @@ const Task = () => {
                               <button
                                 className="btn btn-outline-danger btn-sm"
                                 title="Delete"
+                                onClick={() => OnDelete(todo.id)}
                               >
                                 <i className="bi bi-trash"></i>
                               </button>
