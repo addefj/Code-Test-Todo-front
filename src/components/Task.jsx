@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
 import axios from "axios";
 import { useForm } from "react-hook-form";
+import { sortTodos } from "../services/taskService.js";
 
 const Task = () => {
   // todo*: make this component functional by implementing state management and API calls
@@ -54,6 +55,7 @@ const Task = () => {
       console.error("There was an error deleting the task!", error);
     }
   };
+
 
   const onMarkComplete = async (data) => {
     console.log("Mark task as complete with id: ", data.id);
@@ -119,6 +121,11 @@ const Task = () => {
       });
     console.log("Finished Fetching tasks");
   };
+
+  const onSort = (sortType) => {
+  const sorted = sortTodos(sortType, todos);
+  setTodos(sorted);
+};
 
   return (
     <div className="dashboard-layout">
@@ -277,15 +284,63 @@ const Task = () => {
                     <button
                       className="btn btn-outline-secondary btn-sm"
                       title="Filter"
+
                     >
                       <i className="bi bi-funnel"></i>
                     </button>
+                    
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      className="btn btn-outline-secondary btn-sm dropdown-toggle"
                       title="Sort"
+                      data-bs-toggle="dropdown"
+                    
                     >
                       <i className="bi bi-sort-down"></i>
                     </button>
+
+                    <ul className="dropdown-menu">
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => onSort("dueAsc")}
+                    >
+                      Due Date ↑
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => onSort("dueDesc")}
+                    >
+                      Due Date ↓
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => onSort("title")}
+                    >
+                      Title A–Z
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => onSort("assignee")}
+                    >
+                      Assignee
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => onSort("created")}
+                    >
+                      Created
+                    </button>
+                  </li>
+                </ul>
+
                   </div>
                 </div>
                 <div className="card-body">
