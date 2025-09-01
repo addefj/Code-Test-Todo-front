@@ -55,6 +55,25 @@ const Task = () => {
     }
   };
 
+  const onMarkComplete = async (data) => {
+    console.log("Mark task as complete with id: ", data.id);
+
+    data.completed = !data.completed; 
+
+    try {
+      const response = await axios.put(apiEndpoint + "/" + data.id, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.status === 204) {
+        console.log("Task successfully updated:", response.data);
+        fetchAllTasks(); // Refresh the task list
+      }
+    } catch (error) {
+      console.error("There was an error updating the task!", error);
+    }
+  };
 
   const onSubmit = async (data) => {
     data.numberOfAttachments = data.numberOfAttachments.length; // Update to reflect number of files
@@ -155,9 +174,9 @@ const Task = () => {
                         {...register("description", {
                           required: "Description is required",
                           minLength: {
-                            value: 20,
+                            value: 3,
                             message:
-                              "Description must be at least 20 characters",
+                              "Description must be at least 3 characters",
                           },
                         })}
                       ></textarea>
