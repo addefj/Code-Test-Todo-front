@@ -150,6 +150,11 @@ const Task = () => {
     console.log("Finished fetching persons");
   };
 
+const getPersonName = (id) => {
+  const person = persons.find((p) => p.id === id);
+  return person ? person.name : "";
+};
+
   const onSort = (sortType) => {
     const sorted = sortTodos(sortType, todos);
     setTodos(sorted);
@@ -404,7 +409,7 @@ const Task = () => {
                                 
                                   {todo.personId && (
                                     <span className="badge bg-info me-2">
-                                  <i className="bi bi-person">placeholder</i>
+                                  <i className="bi bi-person">{getPersonName(todo.personId)}</i>
                                   </span>
                                   )}
                                 
