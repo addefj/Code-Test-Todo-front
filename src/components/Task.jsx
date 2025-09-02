@@ -22,6 +22,14 @@ const Task = () => {
     fetchAllPersons();
   }, []);
 
+const emptyFormValues = {
+    title: "",
+      description: "",
+      dueDate: "",
+      personId: "",
+      numberOfAttachments: 0,
+  };
+
   const {
     register,
     handleSubmit,
@@ -29,22 +37,10 @@ const Task = () => {
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      title: "",
-      description: "",
-      dueDate: "",
-      personId: "",
-      numberOfAttachments: 0,
-    },
+    defaultValues: emptyFormValues
   });
 
-  const emptyFormValues = {
-    title: "",
-      description: "",
-      dueDate: "",
-      personId: "",
-      numberOfAttachments: 0,
-  };
+  
 
   const OnEdit = (todo) => {
     reset(todo);
