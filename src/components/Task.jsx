@@ -14,13 +14,11 @@ const Task = () => {
   const [todos, setTodos] = useState([]);
   const [persons, setPersons] = useState([]);
   const [sortType, setSortType] = useState(null);
-const [filterType, setFilterType] = useState(null);
+  const [filterType, setFilterType] = useState(null);
+  const [editingTodo, setEditingTodo] = useState(null);
 
   useEffect(() => {
     fetchAllTasks();
-  }, []);
-
-  useEffect(() => {
     fetchAllPersons();
   }, []);
 
@@ -39,6 +37,19 @@ const [filterType, setFilterType] = useState(null);
       numberOfAttachments: 0,
     },
   });
+
+  const emptyFormValues = {
+    title: "",
+      description: "",
+      dueDate: "",
+      personId: "",
+      numberOfAttachments: 0,
+  };
+
+  const OnEdit = (todo) => {
+    reset(todo);
+    setEditingTodo(todo); // mark this todo as being edited
+  };
 
   const [selectedFiles, setSelectedFiles] = useState([]); // State to hold selected attachments
 
@@ -85,22 +96,33 @@ const [filterType, setFilterType] = useState(null);
   };
 
   const onSubmit = async (data) => {
-    data.numberOfAttachments = data.numberOfAttachments.length; // Update to reflect number of files
-
-    console.log("Form Data Submitted: ", data);
-
     try {
-      const response = await axios.post(apiEndpointTodo, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.status === 201) {
-        console.log("Task successfully created:", response.data);
-        reset(); // Reset the form after successful submission
-        setSelectedFiles([]); // Clear selected files
-        fetchAllTasks(); // Refresh the task list
+      if (editingTodo) {
+        // ✏️ Editing existing todo
+        const response = await axios.put(
+          apiEndpointTodo + "/" + editingTodo.id,
+          data,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (response.status === 204) {
+          console.log("Task successfully updated:", response.data);
+        }
+        setEditingTodo(null);
+        reset(emptyFormValues);
+      } else {
+        // ➕ Creating new todo
+        const response = await axios.post(apiEndpointTodo, data, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status === 201) {
+          console.log("Task successfully created:", response.data);
+        }
       }
+      reset(); // Reset the form after successful submission
+      setSelectedFiles([]); // Clear selected files
+      fetchAllTasks(); // Refresh the task list
     } catch (error) {
       console.error("There was an error creating the task!", error);
     }
@@ -158,28 +180,28 @@ const [filterType, setFilterType] = useState(null);
   };
 
   const onSort = (type) => {
-  setSortType(type);
-};
+    setSortType(type);
+  };
 
-const onFilter = (type) => {
-  setFilterType(type);
-};
+  const onFilter = (type) => {
+    setFilterType(type);
+  };
 
   const getVisibleTodos = () => {
-  let visible = [...todos];
+    let visible = [...todos];
 
-  // Apply filter first
-  if (filterType) {
-    visible = filterTodos(filterType, visible);
-  }
+    // Apply filter first
+    if (filterType) {
+      visible = filterTodos(filterType, visible);
+    }
 
-  // Then apply sort
-  if (sortType) {
-    visible = sortTodos(sortType, visible);
-  }
+    // Then apply sort
+    if (sortType) {
+      visible = sortTodos(sortType, visible);
+    }
 
-  return visible;
-};
+    return visible;
+  };
 
   return (
     <div className="dashboard-layout">
@@ -329,7 +351,7 @@ const onFilter = (type) => {
                     <div className="d-grid gap-2 d-md-flex justify-content-md-end">
                       <button type="submit" className="btn btn-primary">
                         <i className="bi bi-plus-lg me-2"></i>
-                        Add Task
+                        {editingTodo ? "Update Task" : "Add Task"}
                       </button>
                     </div>
                   </form>
@@ -354,7 +376,7 @@ const onFilter = (type) => {
                           className="dropdown-item"
                           onClick={() => onFilter("")}
                         >
-                         <i> Clear filter </i>
+                          <i> Clear filter </i>
                         </button>
                       </li>
 
@@ -394,7 +416,7 @@ const onFilter = (type) => {
 
                     <ul className="dropdown-menu">
                       <li>
-                          <button
+                        <button
                           className="dropdown-item"
                           onClick={() => onSort("")}
                         >
@@ -510,6 +532,7 @@ const onFilter = (type) => {
                               <button
                                 className="btn btn-outline-primary btn-sm"
                                 title="Edit"
+                                onClick={() => OnEdit(todo)}
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
