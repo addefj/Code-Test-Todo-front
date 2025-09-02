@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
 import axios from "axios";
 import { useForm } from "react-hook-form";
-import { sortTodos } from "../services/taskService.js";
+import { sortTodos, filterTodos } from "../services/taskService.js";
 
 const Task = () => {
   // todo*: make this component functional by implementing state management and API calls
@@ -13,6 +13,8 @@ const Task = () => {
   const token = localStorage.getItem("auth_token");
   const [todos, setTodos] = useState([]);
   const [persons, setPersons] = useState([]);
+  const [sortType, setSortType] = useState(null);
+const [filterType, setFilterType] = useState(null);
 
   useEffect(() => {
     fetchAllTasks();
@@ -150,15 +152,34 @@ const Task = () => {
     console.log("Finished fetching persons");
   };
 
-const getPersonName = (id) => {
-  const person = persons.find((p) => p.id === id);
-  return person ? person.name : "";
+  const getPersonName = (id) => {
+    const person = persons.find((p) => p.id === id);
+    return person ? person.name : "";
+  };
+
+  const onSort = (type) => {
+  setSortType(type);
 };
 
-  const onSort = (sortType) => {
-    const sorted = sortTodos(sortType, todos);
-    setTodos(sorted);
-  };
+const onFilter = (type) => {
+  setFilterType(type);
+};
+
+  const getVisibleTodos = () => {
+  let visible = [...todos];
+
+  // Apply filter first
+  if (filterType) {
+    visible = filterTodos(filterType, visible);
+  }
+
+  // Then apply sort
+  if (sortType) {
+    visible = sortTodos(sortType, visible);
+  }
+
+  return visible;
+};
 
   return (
     <div className="dashboard-layout">
@@ -262,7 +283,9 @@ const getPersonName = (id) => {
 
                           {persons.length > 0 &&
                             persons.map((person) => (
-                              <option key={person.id} value={person.id}>{person.name}</option>
+                              <option key={person.id} value={person.id}>
+                                {person.name}
+                              </option>
                             ))}
                         </select>
                       </div>
@@ -318,11 +341,48 @@ const getPersonName = (id) => {
                   <h5 className="card-title mb-0">Tasks</h5>
                   <div className="btn-group">
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      className="btn btn-outline-secondary btn-sm dropdown-toggle"
                       title="Filter"
+                      data-bs-toggle="dropdown"
                     >
                       <i className="bi bi-funnel"></i>
                     </button>
+
+                    <ul className="dropdown-menu">
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onFilter("")}
+                        >
+                         <i> Clear filter </i>
+                        </button>
+                      </li>
+
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onFilter("completed")}
+                        >
+                          Completed
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onFilter("in-progress")}
+                        >
+                          In-progress
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onFilter("pending")}
+                        >
+                          Pending
+                        </button>
+                      </li>
+                    </ul>
 
                     <button
                       className="btn btn-outline-secondary btn-sm dropdown-toggle"
@@ -334,6 +394,13 @@ const getPersonName = (id) => {
 
                     <ul className="dropdown-menu">
                       <li>
+                          <button
+                          className="dropdown-item"
+                          onClick={() => onSort("")}
+                        >
+                          <i>No sorting</i>
+                        </button>
+
                         <button
                           className="dropdown-item"
                           onClick={() => onSort("dueAsc")}
@@ -380,12 +447,12 @@ const getPersonName = (id) => {
                   <div className="list-group">
                     {/* Start of conditional rendering */}
 
-                    {todos.length === 0 ? (
+                    {getVisibleTodos().length === 0 ? (
                       <li className="list-group-item border p-3">
                         No items in your Todolist
                       </li>
                     ) : (
-                      todos.map((todo) => (
+                      getVisibleTodos().map((todo) => (
                         <div
                           className="list-group-item list-group-item-action"
                           key={todo.id}
@@ -406,21 +473,30 @@ const getPersonName = (id) => {
                                   <i className="bi bi-calendar-event"> </i>
                                   Due: {todo.dueDate.slice(0, 10)}
                                 </small>
-                                
-                                  {todo.personId && (
-                                    <span className="badge bg-info me-2">
-                                  <i className="bi bi-person">{getPersonName(todo.personId)}</i>
+
+                                {todo.personId && (
+                                  <span className="badge bg-info me-2">
+                                    <i className="bi bi-person">
+                                      {getPersonName(todo.personId)}
+                                    </i>
                                   </span>
-                                  )}
-                                
+                                )}
+
                                 <span
                                   className={`badge ${
-                                    todo.personId ? (todo.completed ? "bg-success" : "bg-primary") : "bg-warning"
-                                  } text-dark me-2`}
-                                >{todo.personId ? (todo.completed ? "completed" : "in progress") : "pending"}
-                                  
+                                    todo.personId
+                                      ? todo.completed
+                                        ? "bg-success"
+                                        : "bg-primary"
+                                      : "bg-warning text-dark"
+                                  }  me-2`}
+                                >
+                                  {todo.personId
+                                    ? todo.completed
+                                      ? "completed"
+                                      : "in progress"
+                                    : "pending"}
                                 </span>
-
                               </div>
                             </div>
                             <div className="btn-group ms-3">
