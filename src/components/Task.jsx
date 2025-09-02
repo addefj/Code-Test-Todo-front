@@ -415,10 +415,10 @@ const getPersonName = (id) => {
                                 
                                 <span
                                   className={`badge ${
-                                    todo.completed ? "bg-success" : "bg-warning"
+                                    todo.personId ? (todo.completed ? "bg-success" : "bg-primary") : "bg-warning"
                                   } text-dark me-2`}
-                                >
-                                  {todo.completed ? "completed" : "in progress"}
+                                >{todo.personId ? (todo.completed ? "completed" : "in progress") : "pending"}
+                                  
                                 </span>
 
                               </div>
