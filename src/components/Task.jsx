@@ -484,18 +484,18 @@ const onFilter = (type) => {
 
                                 <span
                                   className={`badge ${
-                                    todo.personId
-                                      ? todo.completed
-                                        ? "bg-success"
-                                        : "bg-primary"
-                                      : "bg-warning text-dark"
+                                    !todo.completed
+                                      ? todo.personId
+                                        ? "bg-primary"
+                                        : "bg-warning text-dark"
+                                      : "bg-success"
                                   }  me-2`}
                                 >
-                                  {todo.personId
-                                    ? todo.completed
-                                      ? "completed"
-                                      : "in progress"
-                                    : "pending"}
+                                  {!todo.completed
+                                    ? todo.personId
+                                      ? "in-progress"
+                                      : "pending"
+                                    : "completed"}
                                 </span>
                               </div>
                             </div>
