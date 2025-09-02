@@ -8,12 +8,18 @@ import { sortTodos } from "../services/taskService.js";
 
 const Task = () => {
   // todo*: make this component functional by implementing state management and API calls
-  const apiEndpoint = "http://localhost:9090/api/todo";
+  const apiEndpointTodo = "http://localhost:9090/api/todo";
+  const apiEndpointPerson = "http://localhost:9090/api/person";
   const token = localStorage.getItem("auth_token");
   const [todos, setTodos] = useState([]);
+  const [persons, setPersons] = useState([]);
 
   useEffect(() => {
     fetchAllTasks();
+  }, []);
+
+  useEffect(() => {
+    fetchAllPersons();
   }, []);
 
   const {
@@ -42,7 +48,7 @@ const Task = () => {
   const OnDelete = async (id) => {
     console.log("Delete task with id: ", id);
     try {
-      const response = await axios.delete(apiEndpoint + "/" + id, {
+      const response = await axios.delete(apiEndpointTodo + "/" + id, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -56,14 +62,13 @@ const Task = () => {
     }
   };
 
-
   const onMarkComplete = async (data) => {
     console.log("Mark task as complete with id: ", data.id);
 
-    data.completed = !data.completed; 
+    data.completed = !data.completed;
 
     try {
-      const response = await axios.put(apiEndpoint + "/" + data.id, data, {
+      const response = await axios.put(apiEndpointTodo + "/" + data.id, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -83,7 +88,7 @@ const Task = () => {
     console.log("Form Data Submitted: ", data);
 
     try {
-      const response = await axios.post(apiEndpoint, data, {
+      const response = await axios.post(apiEndpointTodo, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -103,13 +108,13 @@ const Task = () => {
     console.log("Started Fetching tasks");
 
     await axios
-      .get(apiEndpoint, {
+      .get(apiEndpointTodo, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Response: ", response);
+        console.log("Task Response: ", response);
         if (response.status === 200) {
           setTodos(response.data);
         } else {
@@ -122,10 +127,33 @@ const Task = () => {
     console.log("Finished Fetching tasks");
   };
 
+  const fetchAllPersons = async () => {
+    console.log("Started fetching persons");
+
+    await axios
+      .get(apiEndpointPerson, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Person Response: ", response);
+        if (response.status === 200) {
+          setPersons(response.data);
+        } else {
+          console.log("Unexpected response status: ", response.status);
+        }
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the persons!", error);
+      });
+    console.log("Finished fetching persons");
+  };
+
   const onSort = (sortType) => {
-  const sorted = sortTodos(sortType, todos);
-  setTodos(sorted);
-};
+    const sorted = sortTodos(sortType, todos);
+    setTodos(sorted);
+  };
 
   return (
     <div className="dashboard-layout">
@@ -226,8 +254,11 @@ const Task = () => {
                           <option value="">
                             -- Select Person (Optional) --
                           </option>
-                          <option value="1">Mehrdad Javan</option>
-                          <option value="2">Simon Elbrink</option>
+
+                          {persons.length > 0 &&
+                            persons.map((person) => (
+                              <option key={person.id} value={person.id}>{person.name}</option>
+                            ))}
                         </select>
                       </div>
                     </div>
@@ -284,63 +315,60 @@ const Task = () => {
                     <button
                       className="btn btn-outline-secondary btn-sm"
                       title="Filter"
-
                     >
                       <i className="bi bi-funnel"></i>
                     </button>
-                    
+
                     <button
                       className="btn btn-outline-secondary btn-sm dropdown-toggle"
                       title="Sort"
                       data-bs-toggle="dropdown"
-                    
                     >
                       <i className="bi bi-sort-down"></i>
                     </button>
 
                     <ul className="dropdown-menu">
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={() => onSort("dueAsc")}
-                    >
-                      Due Date ↑
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={() => onSort("dueDesc")}
-                    >
-                      Due Date ↓
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={() => onSort("title")}
-                    >
-                      Title A–Z
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={() => onSort("assignee")}
-                    >
-                      Assignee
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className="dropdown-item"
-                      onClick={() => onSort("created")}
-                    >
-                      Created
-                    </button>
-                  </li>
-                </ul>
-
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onSort("dueAsc")}
+                        >
+                          Due Date ↑
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onSort("dueDesc")}
+                        >
+                          Due Date ↓
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onSort("title")}
+                        >
+                          Title A–Z
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onSort("assignee")}
+                        >
+                          Assignee
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => onSort("created")}
+                        >
+                          Created
+                        </button>
+                      </li>
+                    </ul>
                   </div>
                 </div>
                 <div className="card-body">
@@ -373,10 +401,13 @@ const Task = () => {
                                   <i className="bi bi-calendar-event"> </i>
                                   Due: {todo.dueDate.slice(0, 10)}
                                 </small>
-                                <span className="badge bg-info me-2">
-                                  <i className="bi bi-person"></i>
-                                  Placeholder for Assignee
-                                </span>
+                                
+                                  {todo.personId && (
+                                    <span className="badge bg-info me-2">
+                                  <i className="bi bi-person">placeholder</i>
+                                  </span>
+                                  )}
+                                
                                 <span
                                   className={`badge ${
                                     todo.completed ? "bg-success" : "bg-warning"
@@ -385,17 +416,6 @@ const Task = () => {
                                   {todo.completed ? "completed" : "in progress"}
                                 </span>
 
-                                {todo.numberOfAttachments &&
-                                todo.numberOfAttachments.length == 0 ? (
-                                  <span className="badge bg-secondary me-2">
-                                    {todo.numberOfAttachments.length} attachment
-                                    {todo.numberOfAttachments.length > 1
-                                      ? "s"
-                                      : ""}
-                                  </span>
-                                ) : (
-                                  ""
-                                )}
                               </div>
                             </div>
                             <div className="btn-group ms-3">
