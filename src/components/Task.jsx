@@ -2,32 +2,38 @@ import React, { useEffect, useState } from "react";
 import "./Task.css";
 import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
-import axios from "axios";
 import { useForm } from "react-hook-form";
-import { sortTodos, filterTodos } from "../services/taskService.js";
+import { getPersonName } from "../utils/personUtils";
+import { sortTodos, filterTodos } from "../utils/taskUtils";
+import {
+  getTodos,
+  getPersons,
+  createTodo,
+  editTodo,
+  updateCompleteStatus,
+  deleteTodo,
+} from "../services/taskService.js";
 
 const Task = () => {
-  // todo*: make this component functional by implementing state management and API calls
-  const apiEndpointTodo = "http://localhost:9090/api/todo";
-  const apiEndpointPerson = "http://localhost:9090/api/person";
   const token = localStorage.getItem("auth_token");
   const [todos, setTodos] = useState([]);
   const [persons, setPersons] = useState([]);
   const [sortType, setSortType] = useState(null);
   const [filterType, setFilterType] = useState(null);
-  const [editingTodo, setEditingTodo] = useState(null);
+  const [editingTodo, setEditingTodo] = useState(null); //state for editing
+  const [selectedFiles, setSelectedFiles] = useState([]); // State to hold selected attachments
 
   useEffect(() => {
     fetchAllTasks();
     fetchAllPersons();
   }, []);
 
-const emptyFormValues = {
+  const emptyFormValues = {
     title: "",
-      description: "",
-      dueDate: "",
-      personId: "",
-      numberOfAttachments: 0,
+    description: "",
+    dueDate: "",
+    personId: "",
+    numberOfAttachments: 0,
   };
 
   const {
@@ -37,51 +43,69 @@ const emptyFormValues = {
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: emptyFormValues
+    defaultValues: emptyFormValues,
   });
 
-  
+  const fetchAllPersons = async () => {
+    try {
+      console.log("Started fetching persons");
+      const response = await getPersons(token);
+      if (response.status === 200) {
+        console.log("Person Response: ", response);
+        setPersons(response.data);
+      }
+      console.log("Finished fetching persons");
+    } catch (error) {
+      console.error("There was an error fetching the persons!", error);
+    }
+  };
 
-  const OnEdit = (todo) => {
+  const fetchAllTasks = async () => {
+    try {
+      console.log("Started Fetching tasks");
+      const response = await getTodos(token);
+      if (response.status === 200) {
+        console.log("Task Response: ", response);
+        setTodos(response.data);
+      }
+      console.log("Finished Fetching tasks");
+    } catch (error) {
+      console.error("There was an error fetching the tasks!", error);
+    }
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      if (editingTodo) {
+        // ✏️ Editing existing todo
+        const response = await editTodo(editingTodo, data, token);
+        if (response.status === 204)
+          console.log("Task successfully updated:", response.data);
+        setEditingTodo(null);
+      } else {
+        // ➕ Creating new todo
+        const response = await createTodo(data, token);
+        if (response.status === 201)
+          console.log("Task successfully created:", response.data);
+      }
+      reset(emptyFormValues); //reset the form after submit/update
+      setSelectedFiles([]); // Clear selected files
+      fetchAllTasks(); // Refresh the task list
+    } catch (error) {
+      console.error("There was an error creating the task!", error);
+    }
+  };
+
+  const onEdit = (todo) => {
     reset(todo);
     setEditingTodo(todo); // mark this todo as being edited
   };
 
-  const [selectedFiles, setSelectedFiles] = useState([]); // State to hold selected attachments
-
-  const handleFileSelection = (e) => {
-    const newFiles = Array.from(e.target.files);
-    setSelectedFiles(newFiles);
-  };
-
-  const OnDelete = async (id) => {
-    console.log("Delete task with id: ", id);
+  const onUpdateCompleteStatus = async (data) => {
     try {
-      const response = await axios.delete(apiEndpointTodo + "/" + id, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.status === 204) {
-        console.log("Task successfully deleted");
-        fetchAllTasks(); // Refresh the task list
-      }
-    } catch (error) {
-      console.error("There was an error deleting the task!", error);
-    }
-  };
-
-  const onMarkComplete = async (data) => {
-    console.log("Mark task as complete with id: ", data.id);
-
-    data.completed = !data.completed;
-
-    try {
-      const response = await axios.put(apiEndpointTodo + "/" + data.id, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      console.log("Update task complete status with id: ", data.id);
+      data.completed = !data.completed;
+      const response = await updateCompleteStatus(data, token);
       if (response.status === 204) {
         console.log("Task successfully updated:", response.data);
         fetchAllTasks(); // Refresh the task list
@@ -91,111 +115,34 @@ const emptyFormValues = {
     }
   };
 
-  const onSubmit = async (data) => {
+  const onDelete = async (id) => {
     try {
-      if (editingTodo) {
-        // ✏️ Editing existing todo
-        const response = await axios.put(
-          apiEndpointTodo + "/" + editingTodo.id,
-          data,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.status === 204) {
-          console.log("Task successfully updated:", response.data);
-        }
-        setEditingTodo(null);
-        reset(emptyFormValues);
-      } else {
-        // ➕ Creating new todo
-        const response = await axios.post(apiEndpointTodo, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.status === 201) {
-          console.log("Task successfully created:", response.data);
-        }
+      console.log("Delete task with id: ", id);
+      const response = await deleteTodo(id, token);
+      if (response.status === 204) {
+        console.log("Task successfully deleted", response.data);
+        fetchAllTasks(); // Refresh the task list
       }
-      reset(); // Reset the form after successful submission
-      setSelectedFiles([]); // Clear selected files
-      fetchAllTasks(); // Refresh the task list
     } catch (error) {
-      console.error("There was an error creating the task!", error);
+      console.error("There was an error deleting the task!", error);
     }
   };
 
-  const fetchAllTasks = async () => {
-    console.log("Started Fetching tasks");
-
-    await axios
-      .get(apiEndpointTodo, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Task Response: ", response);
-        if (response.status === 200) {
-          setTodos(response.data);
-        } else {
-          console.log("Unexpected response status: ", response.status);
-        }
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the tasks!", error);
-      });
-    console.log("Finished Fetching tasks");
-  };
-
-  const fetchAllPersons = async () => {
-    console.log("Started fetching persons");
-
-    await axios
-      .get(apiEndpointPerson, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Person Response: ", response);
-        if (response.status === 200) {
-          setPersons(response.data);
-        } else {
-          console.log("Unexpected response status: ", response.status);
-        }
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the persons!", error);
-      });
-    console.log("Finished fetching persons");
-  };
-
-  const getPersonName = (id) => {
-    const person = persons.find((p) => p.id === id);
-    return person ? person.name : "";
-  };
-
-  const onSort = (type) => {
-    setSortType(type);
-  };
-
-  const onFilter = (type) => {
-    setFilterType(type);
+  const handleFileSelection = (e) => {
+    const newFiles = Array.from(e.target.files);
+    setSelectedFiles(newFiles);
   };
 
   const getVisibleTodos = () => {
     let visible = [...todos];
-
     // Apply filter first
     if (filterType) {
       visible = filterTodos(filterType, visible);
     }
-
     // Then apply sort
     if (sortType) {
       visible = sortTodos(sortType, visible);
     }
-
     return visible;
   };
 
@@ -370,7 +317,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onFilter("")}
+                          onClick={() => setFilterType("")}
                         >
                           <i> Clear filter </i>
                         </button>
@@ -379,7 +326,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onFilter("completed")}
+                          onClick={() => setFilterType("completed")}
                         >
                           Completed
                         </button>
@@ -387,7 +334,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onFilter("in-progress")}
+                          onClick={() => setFilterType("in-progress")}
                         >
                           In-progress
                         </button>
@@ -395,7 +342,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onFilter("pending")}
+                          onClick={() => setFilterType("pending")}
                         >
                           Pending
                         </button>
@@ -414,14 +361,14 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onSort("")}
+                          onClick={() => setSortType("")}
                         >
                           <i>No sorting</i>
                         </button>
 
                         <button
                           className="dropdown-item"
-                          onClick={() => onSort("dueAsc")}
+                          onClick={() => setSortType("dueAsc")}
                         >
                           Due Date ↑
                         </button>
@@ -429,7 +376,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onSort("dueDesc")}
+                          onClick={() => setSortType("dueDesc")}
                         >
                           Due Date ↓
                         </button>
@@ -437,7 +384,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onSort("title")}
+                          onClick={() => setSortType("title")}
                         >
                           Title A–Z
                         </button>
@@ -445,7 +392,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onSort("assignee")}
+                          onClick={() => setSortType("assignee")}
                         >
                           Assignee
                         </button>
@@ -453,7 +400,7 @@ const emptyFormValues = {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => onSort("created")}
+                          onClick={() => setSortType("created")}
                         >
                           Created
                         </button>
@@ -495,7 +442,7 @@ const emptyFormValues = {
                                 {todo.personId && (
                                   <span className="badge bg-info me-2">
                                     <i className="bi bi-person">
-                                      {getPersonName(todo.personId)}
+                                      {getPersonName(todo.personId, persons)}
                                     </i>
                                   </span>
                                 )}
@@ -521,21 +468,21 @@ const emptyFormValues = {
                               <button
                                 className="btn btn-outline-success btn-sm"
                                 title="Complete"
-                                onClick={() => onMarkComplete(todo)}
+                                onClick={() => onUpdateCompleteStatus(todo)}
                               >
                                 <i className="bi bi-check-lg"></i>
                               </button>
                               <button
                                 className="btn btn-outline-primary btn-sm"
                                 title="Edit"
-                                onClick={() => OnEdit(todo)}
+                                onClick={() => onEdit(todo)}
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
                               <button
                                 className="btn btn-outline-danger btn-sm"
                                 title="Delete"
-                                onClick={() => OnDelete(todo.id)}
+                                onClick={() => onDelete(todo.id)}
                               >
                                 <i className="bi bi-trash"></i>
                               </button>

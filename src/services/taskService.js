@@ -1,39 +1,47 @@
 //*todo: implement taskService and call the API
+import axios from "axios";
 
-export const sortTodos = (sortType, visible) => {
-  switch (sortType) {
-    case "dueAsc":
-      console.log("Sorting by due date ascending");
-      return [...visible].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    case "dueDesc":
-      console.log("Sorting by due date descending");
-      return [...visible].sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
-    case "title":
-      console.log("Sorting by title A-Z");
-      return [...visible].sort((a, b) => a.title.localeCompare(b.title));
-    case "assignee":
-      console.log("Sorting by personId");
-      return [...visible].sort((a, b) => (a.personId - b.personId));
-    case "created":
-      console.log("Sorting by created date");
-      return [...visible].sort((a, b) => new Date(a.created) - new Date(b.createdAt));
-    default:
-      return visible;
-  }
+const apiEndpointTodo = "http://localhost:9090/api/todo";
+const apiEndpointPerson = "http://localhost:9090/api/person";
+
+export const getTodos = (token) => {
+    return axios.get(apiEndpointTodo, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 };
 
-export const filterTodos = (filterType, visible) => {
-  switch (filterType) {
-    case "completed":
-      console.log("Filtering by completed status");
-      return [...visible].filter((todo) => todo.completed === true);
-    case "in-progress":
-      console.log("Filtering by in-progress status");
-      return [...visible].filter((todo) => !todo.completed && todo.personId);
-    case "pending":
-      console.log("Filtering by pending status");
-      return [...visible].filter((todo) => !todo.personId);
-    default:
-      return visible;
-  }
+export const createTodo = (data, token) => {
+  return axios.post(apiEndpointTodo, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const editTodo = (editingTodo, data, token) => {
+  return axios.put(apiEndpointTodo + "/" + editingTodo.id, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const updateCompleteStatus = (data, token) => {
+  return axios.put(apiEndpointTodo + "/" + data.id, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const deleteTodo = (id, token) => {
+  return axios.delete(apiEndpointTodo + "/" + id, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getPersons = (token) => {
+    return axios.get(apiEndpointPerson, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 };
