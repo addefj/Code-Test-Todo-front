@@ -447,6 +447,16 @@ const Task = () => {
                                   </span>
                                 )}
 
+                                {todo.numberOfAttachments &&
+                                todo.numberOfAttachments > 0 ? (
+                                  <span className="badge bg-secondary me-2">
+                                    {todo.numberOfAttachments} attachment
+                                    {todo.numberOfAttachments > 1 ? "s" : ""}
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+
                                 <span
                                   className={`badge ${
                                     !todo.completed
