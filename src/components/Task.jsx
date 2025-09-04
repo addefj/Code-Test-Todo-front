@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
 import { useForm } from "react-hook-form";
 import { getPersonName } from "../utils/personUtils";
-import { sortTodos, filterTodos } from "../utils/taskUtils";
+import { sortTodos, filterTodos, convertToFormData } from "../utils/taskUtils";
 import {
   getTodos,
   getPersons,
@@ -33,7 +33,6 @@ const Task = () => {
     description: "",
     dueDate: "",
     personId: "",
-    numberOfAttachments: 0,
   };
 
   const {
@@ -74,17 +73,19 @@ const Task = () => {
     }
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (todo) => {
     try {
+      const formData = convertToFormData(todo, selectedFiles);
+
       if (editingTodo) {
         // ✏️ Editing existing todo
-        const response = await editTodo(editingTodo, data, token);
-        if (response.status === 204)
+        const response = await editTodo(editingTodo, formData, token);
+        if (response.status === 200)
           console.log("Task successfully updated:", response.data);
         setEditingTodo(null);
       } else {
         // ➕ Creating new todo
-        const response = await createTodo(data, token);
+        const response = await createTodo(formData, token);
         if (response.status === 201)
           console.log("Task successfully created:", response.data);
       }
@@ -101,12 +102,13 @@ const Task = () => {
     setEditingTodo(todo); // mark this todo as being edited
   };
 
-  const onUpdateCompleteStatus = async (data) => {
+  const onUpdateCompleteStatus = async (todo) => {
     try {
-      console.log("Update task complete status with id: ", data.id);
-      data.completed = !data.completed;
-      const response = await updateCompleteStatus(data, token);
-      if (response.status === 204) {
+      const updatedTodo = { ...todo, completed: !todo.completed };
+      console.log("Update task complete status with id: ", updatedTodo.id);
+      const formData = convertToFormData(updatedTodo, selectedFiles);
+      const response = await updateCompleteStatus(formData, updatedTodo.id, token);
+      if (response.status === 200) {
         console.log("Task successfully updated:", response.data);
         fetchAllTasks(); // Refresh the task list
       }
@@ -263,17 +265,12 @@ const Task = () => {
                           className="form-control"
                           id="todoAttachments"
                           multiple
-                          {...register("numberOfAttachments", {
-                            onChange: handleFileSelection,
-                          })}
+                          onChange={handleFileSelection}
                         />
                         <button
                           className="btn btn-outline-secondary"
                           type="button"
-                          onClick={() => {
-                            setSelectedFiles([]);
-                            setValue("numberOfAttachments", []);
-                          }}
+                          onClick={() => setSelectedFiles([])}
                         >
                           <i className="bi bi-x-lg"></i>
                         </button>
