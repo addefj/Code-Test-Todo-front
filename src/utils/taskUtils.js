@@ -42,3 +42,18 @@ export const filterTodos = (filterType, visible) => {
       return visible;
   }
 };
+
+export const convertToFormData = (todo, selectedFiles) => {
+    const formData = new FormData();
+      formData.append(
+        "todo",
+        new Blob([JSON.stringify(todo)], { type: "application/json" })
+      );
+      //add attachments
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      return formData;
+};
+    

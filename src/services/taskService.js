@@ -5,14 +5,16 @@ const apiEndpointTodo = "http://localhost:9090/api/todo";
 const apiEndpointPerson = "http://localhost:9090/api/person";
 
 export const getTodos = (token) => {
-    return axios.get(apiEndpointTodo, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  return axios.get(apiEndpointTodo, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
-export const createTodo = (data, token) => {
-  return axios.post(apiEndpointTodo, data, {
-    headers: { Authorization: `Bearer ${token}` },
+export const createTodo = (formData, token) => {
+  return axios.post(apiEndpointTodo, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
 
@@ -22,8 +24,8 @@ export const editTodo = (editingTodo, data, token) => {
   });
 };
 
-export const updateCompleteStatus = (data, token) => {
-  return axios.put(apiEndpointTodo + "/" + data.id, data, {
+export const updateCompleteStatus = (formData, id, token) => {
+  return axios.put(apiEndpointTodo + "/" + id, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -39,9 +41,9 @@ export const deleteTodo = (id, token) => {
 };
 
 export const getPersons = (token) => {
-    return axios.get(apiEndpointPerson, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+  return axios.get(apiEndpointPerson, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
