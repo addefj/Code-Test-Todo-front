@@ -107,7 +107,11 @@ const Task = () => {
       const updatedTodo = { ...todo, completed: !todo.completed };
       console.log("Update task complete status with id: ", updatedTodo.id);
       const formData = convertToFormData(updatedTodo, selectedFiles);
-      const response = await updateCompleteStatus(formData, updatedTodo.id, token);
+      const response = await updateCompleteStatus(
+        formData,
+        updatedTodo.id,
+        token
+      );
       if (response.status === 200) {
         console.log("Task successfully updated:", response.data);
         fetchAllTasks(); // Refresh the task list
@@ -161,6 +165,7 @@ const Task = () => {
         <div className="dashboard-content">
           <div className="row">
             <div className="col-md-8 mx-auto">
+              {/* Start of form */}
               <div className="card shadow-sm task-form-section">
                 <div className="card-body">
                   <h2 className="card-title mb-4">Add New Task</h2>
@@ -297,7 +302,7 @@ const Task = () => {
                   </form>
                 </div>
               </div>
-
+              {/* Start of todolist */}
               <div className="card shadow-sm tasks-list mt-4">
                 <div className="card-header bg-white d-flex justify-content-between align-items-center">
                   <h5 className="card-title mb-0">Tasks</h5>

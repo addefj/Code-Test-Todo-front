@@ -47,3 +47,11 @@ export const getPersons = (token) => {
     },
   });
 };
+
+export const createPerson = (person, token) => {
+  return axios.post(apiEndpointPerson + "/register", person, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
