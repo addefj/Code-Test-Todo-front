@@ -3,7 +3,7 @@ import "./Task.css";
 import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
 import { useForm } from "react-hook-form";
-import { getPersons, createPerson } from "../services/taskService.js";
+import { getPersons, createPerson, deletePerson } from "../services/taskService.js";
 
 const Teams = () => {
   const [persons, setPersons] = useState([]);
@@ -55,6 +55,19 @@ const Teams = () => {
       console.error("There was an error creating the person!", error);
     }
   };
+
+  const onDelete = async (id) => {
+      try {
+        console.log("Delete person with id: ", id);
+        const response = await deletePerson(id, token);
+        if (response.status === 204) {
+          console.log("Person successfully deleted", response.data);
+          fetchAllPersons(); // Refresh the person list
+        }
+      } catch (error) {
+        console.error("There was an error deleting the person!", error);
+      }
+    };
 
   return (
     <div className="dashboard-layout">
@@ -333,6 +346,7 @@ const Teams = () => {
                                     <button
                                       className="btn btn-outline-danger btn-sm"
                                       title="Delete"
+                                      onClick={() => onDelete(person.id)}
                                     >
                                       <i className="bi bi-trash"></i>
                                     </button>

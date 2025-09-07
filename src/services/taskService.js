@@ -55,3 +55,11 @@ export const createPerson = (person, token) => {
     },
   });
 };
+
+export const deletePerson = (id, token) => {
+  return axios.delete(apiEndpointPerson + "/" + id, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
