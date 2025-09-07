@@ -82,8 +82,8 @@ const Teams = () => {
                         <input
                           type="text"
                           className={`form-control ${
-                          errors.name ? "is-invalid" : ""
-                        }`}
+                            errors.name ? "is-invalid" : ""
+                          }`}
                           id="name"
                           {...register("name", {
                             required: "Name is required",
@@ -99,10 +99,10 @@ const Teams = () => {
                           })}
                         />
                         {errors.name && (
-                        <div className="invalid-feedback">
-                          {errors.title.message}
-                        </div>
-                      )}
+                          <div className="invalid-feedback">
+                            {errors.name.message}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-6 mb-3">
                         <label htmlFor="username" className="form-label">
@@ -111,20 +111,27 @@ const Teams = () => {
                         <input
                           type="text"
                           className={`form-control ${
-                          errors.username ? "is-invalid" : ""
-                        }`}
+                            errors.username ? "is-invalid" : ""
+                          }`}
                           id="username"
                           {...register("username", {
-                            required: true,
-                            max: 50,
-                            min: 4,
+                            required: "Username is required",
+                            minLength: {
+                              value: 4,
+                              message: "Username must be at least 4 characters",
+                            },
+                            maxLength: {
+                              value: 50,
+                              message:
+                                "Username can not be more than 50 characters",
+                            },
                           })}
                         />
                         {errors.username && (
-                        <div className="invalid-feedback">
-                          {errors.title.message}
-                        </div>
-                      )}
+                          <div className="invalid-feedback">
+                            {errors.username.message}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -139,12 +146,19 @@ const Teams = () => {
                         }`}
                         id="email"
                         {...register("email", {
-                          required: true,
-                          max: 150,
-                          min: 5,
+                          required: "Email is required",
+                          minLength: {
+                            value: 5,
+                            message: "Email must be at least 5 characters",
+                          },
+                          maxLength: {
+                            value: 150,
+                            message:
+                              "Email can not be more than 150 characters",
+                          },
                         })}
                       />
-                      {errors.title && (
+                      {errors.email && (
                         <div className="invalid-feedback">
                           {errors.email.message}
                         </div>
@@ -159,20 +173,27 @@ const Teams = () => {
                         <input
                           type="password"
                           className={`form-control ${
-                          errors.password ? "is-invalid" : ""
-                        }`}
+                            errors.password ? "is-invalid" : ""
+                          }`}
                           id="password"
                           {...register("password", {
-                            required: true,
-                            max: 100,
-                            min: 8,
+                            required: "Password is required",
+                            minLength: {
+                              value: 8,
+                              message: "Password must be at least 8 characters",
+                            },
+                            maxLength: {
+                              value: 100,
+                              message:
+                                "Password can not be more than 100 characters",
+                            },
                           })}
                         />
-                        {errors.title && (
-                        <div className="invalid-feedback">
-                          {errors.password.message}
-                        </div>
-                      )}
+                        {errors.password && (
+                          <div className="invalid-feedback">
+                            {errors.password.message}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-6 mb-3">
                         <label htmlFor="confirmPassword" className="form-label">
@@ -181,20 +202,28 @@ const Teams = () => {
                         <input
                           type="password"
                           className={`form-control ${
-                          errors.confirmPassword ? "is-invalid" : ""
-                        }`}
+                            errors.confirmPassword ? "is-invalid" : ""
+                          }`}
                           id="confirmPassword"
                           {...register("confirmPassword", {
-                            required: true,
-                            max: 100,
-                            min: 8,
+                            required: "Confirm password is required",
+
+                            minLength: {
+                              value: 8,
+                              message: "Password must be at least 8 characters",
+                            },
+                            maxLength: {
+                              value: 100,
+                              message:
+                                "Password can not be more than 100 characters",
+                            },
                           })}
                         />
-                        {errors.title && (
-                        <div className="invalid-feedback">
-                          {errors.confirmPassword.message}
-                        </div>
-                      )}
+                        {errors.confirmPassword && (
+                          <div className="invalid-feedback">
+                            {errors.confirmPassword.message}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -276,14 +305,19 @@ const Teams = () => {
                             <th>Id</th>
                             <th>Name</th>
                             <th>Email</th>
+                            <th className="text-end">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {persons.length === 0 ? (
-                            No persons in you team
+                            <tr>
+                              <td colSpan="4" className="text-center">
+                                No persons in your team
+                              </td>
+                            </tr>
                           ) : (
                             persons.map((person) => (
-                              <tr className="" key={person.id}>
+                              <tr key={person.id}>
                                 <td>{person.id}</td>
                                 <td>{person.name}</td>
                                 <td>{person.email}</td>
