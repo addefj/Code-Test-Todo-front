@@ -5,9 +5,9 @@ import Header from "./Header.jsx";
 import { useForm } from "react-hook-form";
 import { getPersonName } from "../utils/personUtils";
 import { sortTodos, filterTodos, convertToFormData } from "../utils/taskUtils";
+import { getPersons } from "../services/personService.js";
 import {
   getTodos,
-  getPersons,
   createTodo,
   editTodo,
   updateCompleteStatus,

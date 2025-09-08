@@ -3,10 +3,17 @@ import "./Task.css";
 import Sidebar from "./Sidebar";
 import Header from "./Header.jsx";
 import { useForm } from "react-hook-form";
-import { getPersons, createPerson, deletePerson } from "../services/taskService.js";
+import {
+  getPersons,
+  createPerson,
+  deletePerson,
+} from "../services/personService.js";
+import { sortPersons, filterPersons } from "../utils/personUtils.js";
 
 const Teams = () => {
   const [persons, setPersons] = useState([]);
+  const [sortType, setSortType] = useState(null);
+  const [filterType, setFilterType] = useState(null);
 
   const token = localStorage.getItem("auth_token");
   useEffect(() => {
@@ -57,17 +64,30 @@ const Teams = () => {
   };
 
   const onDelete = async (id) => {
-      try {
-        console.log("Delete person with id: ", id);
-        const response = await deletePerson(id, token);
-        if (response.status === 204) {
-          console.log("Person successfully deleted", response.data);
-          fetchAllPersons(); // Refresh the person list
-        }
-      } catch (error) {
-        console.error("There was an error deleting the person!", error);
+    try {
+      console.log("Delete person with id: ", id);
+      const response = await deletePerson(id, token);
+      if (response.status === 204) {
+        console.log("Person successfully deleted", response.data);
+        fetchAllPersons(); // Refresh the person list
       }
-    };
+    } catch (error) {
+      console.error("There was an error deleting the person!", error);
+    }
+  };
+
+  const getVisiblePersons = () => {
+    let visible = [...persons];
+    // Apply filter first
+    if (filterType) {
+      visible = filterPersons(filterType, visible);
+    }
+    // Then apply sort
+    if (sortType) {
+      visible = sortPersons(sortType, visible);
+    }
+    return visible;
+  };
 
   return (
     <div className="dashboard-layout">
@@ -290,20 +310,43 @@ const Teams = () => {
 
                     <ul className="dropdown-menu">
                       <li>
-                        <button className="dropdown-item">
+                        <button
+                          className="dropdown-item"
+                          onClick={() => setSortType("")}
+                        >
                           <i>No sorting</i>
                         </button>
 
-                        <button className="dropdown-item">Name ↑</button>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => setSortType("nameAsc")}
+                        >
+                          Name ↑
+                        </button>
                       </li>
                       <li>
-                        <button className="dropdown-item">Name ↓</button>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => setSortType("nameDesc")}
+                        >
+                          Name ↓
+                        </button>
                       </li>
                       <li>
-                        <button className="dropdown-item">Id</button>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => setSortType("id")}
+                        >
+                          Id
+                        </button>
                       </li>
                       <li>
-                        <button className="dropdown-item">Email</button>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => setSortType("email")}
+                        >
+                          Email
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -322,14 +365,14 @@ const Teams = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {persons.length === 0 ? (
+                          {getVisiblePersons().length === 0 ? (
                             <tr>
                               <td colSpan="4" className="text-center">
                                 No persons in your team
                               </td>
                             </tr>
                           ) : (
-                            persons.map((person) => (
+                            getVisiblePersons().map((person) => (
                               <tr key={person.id}>
                                 <td>{person.id}</td>
                                 <td>{person.name}</td>
