@@ -22,6 +22,7 @@ const Task = () => {
   const [filterType, setFilterType] = useState(null);
   const [editingTodo, setEditingTodo] = useState(null); //state for editing
   const [selectedFiles, setSelectedFiles] = useState([]); // State to hold selected attachments
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   useEffect(() => {
     fetchAllTasks();
@@ -38,7 +39,6 @@ const Task = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm({
@@ -91,6 +91,7 @@ const Task = () => {
       }
       reset(emptyFormValues); //reset the form after submit/update
       setSelectedFiles([]); // Clear selected files
+      setFileInputKey(Date.now()); // reset file input
       fetchAllTasks(); // Refresh the task list
     } catch (error) {
       console.error("There was an error creating the task!", error);
@@ -266,6 +267,7 @@ const Task = () => {
                       <label className="form-label">Attachments</label>
                       <div className="input-group mb-3">
                         <input
+                          key={fileInputKey}
                           type="file"
                           className="form-control"
                           id="todoAttachments"
