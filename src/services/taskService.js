@@ -10,6 +10,12 @@ export const getTodos = (token) => {
   });
 };
 
+export const getTodosByStatus = (completed, token) => {
+  return axios.get(apiEndpointTodo, {
+    headers: {Authorization: `Bearer ${token}` },
+  }); 
+};
+
 export const createTodo = (formData, token) => {
   return axios.post(apiEndpointTodo, formData, {
     headers: {
