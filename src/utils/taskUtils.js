@@ -34,10 +34,10 @@ export const filterTodos = (filterType, visible) => {
       return [...visible].filter((todo) => todo.completed === true);
     case "in-progress":
       console.log("Filtering by in-progress status");
-      return [...visible].filter((todo) => !todo.completed && todo.personId);
+      return [...visible].filter((todo) => !todo.completed && todo.personId); 
     case "pending":
       console.log("Filtering by pending status");
-      return [...visible].filter((todo) => !todo.personId);
+      return [...visible].filter((todo) => !todo.completed && !todo.personId);
     default:
       return visible;
   }

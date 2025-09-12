@@ -5,9 +5,9 @@ import Header from "./Header.jsx";
 import { useForm } from "react-hook-form";
 import { getPersonName } from "../utils/personUtils";
 import { sortTodos, filterTodos, convertToFormData } from "../utils/taskUtils";
+import { getPersons } from "../services/personService.js";
 import {
   getTodos,
-  getPersons,
   createTodo,
   editTodo,
   updateCompleteStatus,
@@ -22,6 +22,7 @@ const Task = () => {
   const [filterType, setFilterType] = useState(null);
   const [editingTodo, setEditingTodo] = useState(null); //state for editing
   const [selectedFiles, setSelectedFiles] = useState([]); // State to hold selected attachments
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   useEffect(() => {
     fetchAllTasks();
@@ -38,7 +39,6 @@ const Task = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm({
@@ -91,6 +91,7 @@ const Task = () => {
       }
       reset(emptyFormValues); //reset the form after submit/update
       setSelectedFiles([]); // Clear selected files
+      setFileInputKey(Date.now()); // reset file input
       fetchAllTasks(); // Refresh the task list
     } catch (error) {
       console.error("There was an error creating the task!", error);
@@ -107,7 +108,11 @@ const Task = () => {
       const updatedTodo = { ...todo, completed: !todo.completed };
       console.log("Update task complete status with id: ", updatedTodo.id);
       const formData = convertToFormData(updatedTodo, selectedFiles);
-      const response = await updateCompleteStatus(formData, updatedTodo.id, token);
+      const response = await updateCompleteStatus(
+        formData,
+        updatedTodo.id,
+        token
+      );
       if (response.status === 200) {
         console.log("Task successfully updated:", response.data);
         fetchAllTasks(); // Refresh the task list
@@ -161,6 +166,7 @@ const Task = () => {
         <div className="dashboard-content">
           <div className="row">
             <div className="col-md-8 mx-auto">
+              {/* Start of form */}
               <div className="card shadow-sm task-form-section">
                 <div className="card-body">
                   <h2 className="card-title mb-4">Add New Task</h2>
@@ -261,6 +267,7 @@ const Task = () => {
                       <label className="form-label">Attachments</label>
                       <div className="input-group mb-3">
                         <input
+                          key={fileInputKey}
                           type="file"
                           className="form-control"
                           id="todoAttachments"
@@ -297,7 +304,7 @@ const Task = () => {
                   </form>
                 </div>
               </div>
-
+              {/* Start of todolist */}
               <div className="card shadow-sm tasks-list mt-4">
                 <div className="card-header bg-white d-flex justify-content-between align-items-center">
                   <h5 className="card-title mb-0">Tasks</h5>
